@@ -381,6 +381,39 @@
     .cl-text .warn { color: var(--accent); font-weight: 700; }
     .cl-reset { margin-top: 18px; }
 
+    /* ===== Modal (checklist completion) ===== */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(0,0,0,0.62);
+      backdrop-filter: blur(3px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .modal-box {
+      position: relative;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 26px 22px;
+      max-width: 420px; width: 100%;
+      animation: modal-in 0.18s ease;
+    }
+    @keyframes modal-in {
+      from { transform: translateY(12px) scale(0.98); opacity: 0; }
+      to { transform: none; opacity: 1; }
+    }
+    .modal-x {
+      position: absolute; top: 10px; left: 12px;
+      background: none; border: none; color: var(--text-dim);
+      font-size: 1.15rem; cursor: pointer; line-height: 1;
+    }
+    .modal-x:hover { color: var(--text); }
+    .modal-emoji { text-align: center; font-size: 2.6rem; margin-bottom: 6px; }
+    .modal-title { text-align: center; font-size: 1.35rem; margin: 0 0 6px; }
+    .modal-box input[type="text"] { margin-bottom: 4px; }
+    .modal-box .btn { margin-top: 14px; }
+
     .hidden { display: none !important; }
 
     footer {
@@ -464,6 +497,27 @@
         <button class="btn btn-ghost cl-reset" onclick="resetChecklist()">איפוס הסימונים ↺</button>
       </div>
     </section>
+
+    <!-- חלונית סיום צ'ק ליסט -->
+    <div class="modal-overlay hidden" id="cl-modal">
+      <div class="modal-box">
+        <button class="modal-x" onclick="closeChecklistModal()" aria-label="סגור">✕</button>
+        <div id="cl-modal-form">
+          <div class="modal-emoji">🎉</div>
+          <h2 class="modal-title">סיימת את כל הצ'ק ליסט!</h2>
+          <p class="lead" style="text-align:center">רשמו את שמכם המלא כדי לתעד שהשלמתם את נעילת הלילה.</p>
+          <input type="text" id="cl-name" placeholder="שם מלא" autocomplete="name" />
+          <div class="error-msg" id="cl-name-error"></div>
+          <button class="btn btn-primary" onclick="submitChecklistName()">שלח ✓</button>
+        </div>
+        <div id="cl-modal-done" class="hidden">
+          <div class="modal-emoji">✅</div>
+          <h2 class="modal-title">נשמר, תודה!</h2>
+          <p class="lead" style="text-align:center">הדיווח נשלח. אפשר לצאת בבטחה. 🌙</p>
+          <button class="btn btn-secondary" onclick="closeChecklistModal()">סגור</button>
+        </div>
+      </div>
+    </div>
 
     <footer>כלי עזר פנימי לתלמידי בית הספר · הסימונים והתשובות אינם נשמרים במכשיר</footer>
   </main>
@@ -668,7 +722,8 @@
       const passed = (correct / total) >= PASS_THRESHOLD;
 
       // שליחה לגיליון — בכל מקרה (הצלחה או כישלון)
-      sendResultToSheet({
+      postToSheet({
+        kind: 'quiz',
         studentName: s.studentName,
         score: correct,
         totalQuestions: total,
@@ -740,11 +795,11 @@
     }
 
     /* =======================================================================
-     *  שליחת תוצאה ל-Google Sheet (Apps Script Web App)
+     *  שליחה ל-Google Sheet (Apps Script Web App) — משמש גם למבחן וגם לצ'ק ליסט
      * ===================================================================== */
-    function sendResultToSheet(payload) {
+    function postToSheet(payload) {
       if (!SHEETS_WEBAPP_URL) {
-        console.info('[מבחן לילה] לא הוגדר SHEETS_WEBAPP_URL — התוצאה לא נשלחה:', payload);
+        console.info('[גיליון] לא הוגדר SHEETS_WEBAPP_URL — לא נשלח:', payload);
         return;
       }
       // no-cors: Apps Script לא מחזיר כותרות CORS. השליחה מתבצעת, אך אין קריאת תשובה.
@@ -754,15 +809,16 @@
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(payload)
       }).catch(function (e) {
-        // כשל רשת לא חוסם את התלמיד — לוג שקט בלבד.
-        console.warn('[מבחן לילה] שליחת התוצאה נכשלה:', e);
+        // כשל רשת לא חוסם את המשתמש — לוג שקט בלבד.
+        console.warn('[גיליון] השליחה נכשלה:', e);
       });
     }
 
     /* =======================================================================
      *  צ'ק ליסט
      * ===================================================================== */
-    let checklistState = [];  // מערך בוליאני, מתאפס בכל טעינת דף
+    let checklistState = [];   // מערך בוליאני, מתאפס בכל טעינת דף
+    let checklistComplete = false;  // האם כל הסעיפים סומנו (כדי לפתוח את החלונית פעם אחת)
 
     function renderChecklist() {
       const ul = document.getElementById('cl-list');
@@ -787,12 +843,59 @@
       const total = CHECKLIST_ITEMS.length;
       document.getElementById('cl-counter').textContent = done + '/' + total + ' הושלמו';
       document.getElementById('cl-progress').style.width = (done / total * 100) + '%';
+
+      // כשמסמנים את הסעיף האחרון (מעבר ממצב לא-שלם לשלם) — פותחים את חלונית הסיום.
+      const nowComplete = (done === total);
+      if (nowComplete && !checklistComplete) openChecklistModal();
+      checklistComplete = nowComplete;
     }
 
     function resetChecklist() {
       checklistState = new Array(CHECKLIST_ITEMS.length).fill(false);
+      checklistComplete = false;
       renderChecklist();
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /* ===== חלונית סיום צ'ק ליסט ===== */
+    function openChecklistModal() {
+      document.getElementById('cl-modal-form').classList.remove('hidden');
+      document.getElementById('cl-modal-done').classList.add('hidden');
+      document.getElementById('cl-name-error').textContent = '';
+      const inp = document.getElementById('cl-name');
+      inp.value = '';
+      inp.classList.remove('invalid');
+      document.getElementById('cl-modal').classList.remove('hidden');
+      setTimeout(function () { inp.focus(); }, 50);
+    }
+
+    function closeChecklistModal() {
+      document.getElementById('cl-modal').classList.add('hidden');
+    }
+
+    function submitChecklistName() {
+      const inp = document.getElementById('cl-name');
+      const name = inp.value.trim();
+      const err = document.getElementById('cl-name-error');
+      if (!name) {
+        inp.classList.add('invalid');
+        err.textContent = 'יש להזין שם מלא.';
+        inp.focus();
+        return;
+      }
+      inp.classList.remove('invalid');
+      err.textContent = '';
+
+      // נשלח ללשונית נפרדת בגיליון (kind = checklist)
+      postToSheet({
+        kind: 'checklist',
+        studentName: name,
+        timestamp: new Date().toISOString()
+      });
+
+      // מסך אישור בתוך החלונית
+      document.getElementById('cl-modal-form').classList.add('hidden');
+      document.getElementById('cl-modal-done').classList.remove('hidden');
     }
 
     /* =======================================================================
@@ -816,6 +919,14 @@
     document.getElementById('student-name').addEventListener('input', function () {
       this.classList.remove('invalid');
       document.getElementById('name-error').textContent = '';
+    });
+
+    document.getElementById('cl-name').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') submitChecklistName();
+    });
+    document.getElementById('cl-name').addEventListener('input', function () {
+      this.classList.remove('invalid');
+      document.getElementById('cl-name-error').textContent = '';
     });
 
     checklistState = new Array(CHECKLIST_ITEMS.length).fill(false);
