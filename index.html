@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#1b1d22" />
+  <title>מבחן לילה + צ'ק ליסט נעילה</title>
+  <style>
+    :root {
+      --bg: #16181d;
+      --bg-panel: #1f2229;
+      --bg-elev: #262a33;
+      --bg-input: #2c313b;
+      --border: #363b45;
+      --text: #e8eaed;
+      --text-dim: #9aa0aa;
+      --accent: #ff7a1a;        /* כתום סטודיו */
+      --accent-hover: #ff8f3c;
+      --accent-soft: rgba(255, 122, 26, 0.14);
+      --green: #35d07f;         /* ירוק ניאון */
+      --green-soft: rgba(53, 208, 127, 0.14);
+      --red: #ff5a5a;
+      --red-soft: rgba(255, 90, 90, 0.12);
+      --radius: 14px;
+      --shadow: 0 6px 24px rgba(0,0,0,0.35);
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", "Assistant", "Rubik", "Heebo", system-ui, -apple-system, sans-serif;
+      font-size: 17px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(1200px 600px at 80% -10%, rgba(255,122,26,0.08), transparent 60%),
+        radial-gradient(900px 500px at -10% 110%, rgba(53,208,127,0.06), transparent 55%),
+        var(--bg);
+    }
+
+    .wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 0 16px 64px;
+    }
+
+    /* ===== Header / Tabs ===== */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(22,24,29,0.92);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 0 0;
+    }
+    .header-inner {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .brand .dot {
+      width: 12px; height: 12px; border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 12px var(--accent);
+      flex: none;
+    }
+    .brand h1 {
+      font-size: 1.05rem;
+      margin: 0;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+    .brand span.sub { color: var(--text-dim); font-size: 0.8rem; font-weight: 400; }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+    }
+    .tab-btn {
+      flex: 1;
+      appearance: none;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      background: var(--bg-panel);
+      color: var(--text-dim);
+      font-family: inherit;
+      font-size: 0.98rem;
+      font-weight: 600;
+      padding: 12px 10px;
+      border-radius: 12px 12px 0 0;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .tab-btn.active {
+      background: var(--bg-panel);
+      color: var(--text);
+      border-color: var(--accent);
+      border-bottom: none;
+      box-shadow: inset 0 3px 0 var(--accent);
+    }
+    .tab-btn:not(.active):hover { color: var(--text); }
+
+    /* ===== Cards ===== */
+    .card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-top: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    h2 { font-size: 1.2rem; margin: 0 0 4px; }
+    p.lead { color: var(--text-dim); margin: 0 0 18px; font-size: 0.95rem; }
+
+    label.field-label { display:block; font-weight:600; margin-bottom: 8px; }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 14px 16px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 1.05rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input[type="text"]:focus { border-color: var(--accent); }
+    input[type="text"].invalid { border-color: var(--red); }
+    .error-msg { color: var(--red); font-size: 0.85rem; margin-top: 8px; min-height: 1em; }
+
+    .btn {
+      appearance: none;
+      border: none;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 1.05rem;
+      padding: 15px 22px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform 0.08s, background 0.15s, opacity 0.15s;
+      width: 100%;
+    }
+    .btn:active { transform: scale(0.985); }
+    .btn-primary { background: var(--accent); color: #1a1204; }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-secondary {
+      background: var(--bg-elev);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { border-color: var(--accent); }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+    }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn + .btn { margin-top: 12px; }
+
+    /* ===== Quiz progress ===== */
+    .quiz-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+    .quiz-top .counter { font-weight: 700; font-size: 0.95rem; }
+    .quiz-top .student { color: var(--text-dim); font-size: 0.85rem; }
+    .progress-track {
+      height: 8px;
+      background: var(--bg-elev);
+      border-radius: 99px;
+      overflow: hidden;
+      margin: 12px 0 22px;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-hover));
+      width: 0%;
+      transition: width 0.25s ease;
+      border-radius: 99px;
+    }
+
+    .q-type-badge {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 99px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+    .q-type-badge.tf { background: var(--green-soft); color: var(--green); }
+
+    .q-text {
+      font-size: 1.22rem;
+      font-weight: 600;
+      line-height: 1.5;
+      margin: 0 0 20px;
+    }
+
+    .options { display: flex; flex-direction: column; gap: 10px; }
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 15px 16px;
+      background: var(--bg-input);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: border-color 0.12s, background 0.12s;
+      font-size: 1.05rem;
+    }
+    .option:hover { border-color: var(--accent); }
+    .option.selected {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+    .option .radio {
+      width: 22px; height: 22px; border-radius: 50%;
+      border: 2px solid var(--text-dim);
+      flex: none;
+      position: relative;
+      transition: border-color 0.12s;
+    }
+    .option.selected .radio { border-color: var(--accent); }
+    .option.selected .radio::after {
+      content: "";
+      position: absolute;
+      inset: 4px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+    .option input { display: none; }
+
+    .nav-row { display: flex; gap: 12px; margin-top: 24px; }
+    .nav-row .btn { margin-top: 0; }
+    .nav-row .btn.half { flex: 1; }
+
+    /* ===== Result ===== */
+    .result-icon {
+      width: 84px; height: 84px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.6rem;
+      margin: 0 auto 18px;
+    }
+    .result-icon.pass { background: var(--green-soft); color: var(--green); box-shadow: 0 0 30px var(--green-soft); }
+    .result-icon.fail { background: var(--red-soft); color: var(--red); }
+    .result-title { text-align: center; font-size: 1.5rem; font-weight: 800; margin: 0 0 8px; }
+    .result-title.pass { color: var(--green); }
+    .result-title.fail { color: var(--red); }
+    .result-score {
+      text-align: center;
+      font-size: 1.1rem;
+      color: var(--text-dim);
+      margin: 0 0 20px;
+    }
+    .result-score b { color: var(--text); font-size: 1.15rem; }
+    .wrong-box {
+      background: var(--red-soft);
+      border: 1px solid rgba(255,90,90,0.3);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      font-size: 0.95rem;
+    }
+    .wrong-box .nums { font-weight: 700; color: var(--red); letter-spacing: 1px; }
+    .sync-note { text-align:center; color: var(--text-dim); font-size: 0.8rem; margin-top: 14px; }
+
+    /* ===== Checklist ===== */
+    .cl-head { display:flex; align-items:center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .cl-counter {
+      font-weight: 700;
+      background: var(--accent-soft);
+      color: var(--accent);
+      padding: 6px 14px;
+      border-radius: 99px;
+      font-size: 0.95rem;
+      white-space: nowrap;
+    }
+    .cl-progress-track {
+      height: 10px;
+      background: var(--bg-elev);
+      border-radius: 99px;
+      overflow: hidden;
+      margin: 14px 0 8px;
+    }
+    .cl-progress-fill {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, var(--green), #2fb56e);
+      transition: width 0.25s ease;
+      border-radius: 99px;
+    }
+    .cl-list { list-style: none; margin: 18px 0 0; padding: 0; }
+    .cl-item {
+      display: flex;
+      gap: 13px;
+      align-items: flex-start;
+      padding: 14px 14px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--bg-input);
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: background 0.12s, border-color 0.12s, opacity 0.12s;
+    }
+    .cl-item:hover { border-color: var(--accent); }
+    .cl-item.done { opacity: 0.55; background: var(--bg-elev); }
+    .cl-item.done .cl-text { text-decoration: line-through; }
+    .cl-check {
+      width: 26px; height: 26px;
+      border-radius: 7px;
+      border: 2px solid var(--text-dim);
+      flex: none;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.12s;
+      margin-top: 1px;
+    }
+    .cl-item.done .cl-check {
+      background: var(--green);
+      border-color: var(--green);
+      color: #06210f;
+    }
+    .cl-check svg { width: 16px; height: 16px; opacity: 0; transition: opacity 0.12s; }
+    .cl-item.done .cl-check svg { opacity: 1; }
+    .cl-num {
+      font-weight: 800;
+      color: var(--accent);
+      flex: none;
+      min-width: 22px;
+      font-size: 0.95rem;
+      margin-top: 2px;
+    }
+    .cl-text { font-size: 1rem; line-height: 1.5; }
+    .cl-text .warn { color: var(--accent); font-weight: 700; }
+    .cl-reset { margin-top: 18px; }
+
+    .hidden { display: none !important; }
+
+    footer {
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.78rem;
+      margin-top: 30px;
+      opacity: 0.7;
+    }
+
+    @media (max-width: 480px) {
+      html, body { font-size: 16px; }
+      .card { padding: 16px; }
+      .q-text { font-size: 1.12rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="brand">
+        <span class="dot"></span>
+        <div>
+          <h1>מבחן לילה &amp; נעילה</h1>
+          <span class="sub">מיקלט סאונד וקאמרה אובסקורה</span>
+        </div>
+      </div>
+      <nav class="tabs">
+        <button class="tab-btn active" id="tab-quiz-btn" onclick="switchTab('quiz')">📝 מבחן לילה</button>
+        <button class="tab-btn" id="tab-checklist-btn" onclick="switchTab('checklist')">✅ צ'ק ליסט נעילה</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- ============ TAB: QUIZ ============ -->
+    <section id="tab-quiz">
+
+      <!-- Step 1: name entry -->
+      <div class="card" id="quiz-start">
+        <h2>מבחן לילה</h2>
+        <p class="lead">מבחן קצר על נהלי תרגול הלילה. יש לענות נכון על כל 15 השאלות כדי לעבור.</p>
+        <label class="field-label" for="student-name">שם מלא</label>
+        <input type="text" id="student-name" placeholder="הקלד/י את שמך המלא" autocomplete="name" />
+        <div class="error-msg" id="name-error"></div>
+        <button class="btn btn-primary" onclick="startQuiz()">התחל מבחן ▸</button>
+      </div>
+
+      <!-- Step 2: questions -->
+      <div class="card hidden" id="quiz-active">
+        <div class="quiz-top">
+          <span class="counter" id="q-counter">שאלה 1 מתוך 15</span>
+          <span class="student" id="q-student"></span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" id="q-progress"></div></div>
+
+        <div id="q-container"><!-- injected --></div>
+
+        <div class="nav-row">
+          <button class="btn btn-ghost half hidden" id="btn-prev" onclick="prevQuestion()">◂ הקודם</button>
+          <button class="btn btn-primary half" id="btn-next" onclick="nextQuestion()">הבא ▸</button>
+        </div>
+      </div>
+
+      <!-- Step 3: result -->
+      <div class="card hidden" id="quiz-result"><!-- injected --></div>
+    </section>
+
+    <!-- ============ TAB: CHECKLIST ============ -->
+    <section id="tab-checklist" class="hidden">
+      <div class="card">
+        <div class="cl-head">
+          <div>
+            <h2>צ'ק ליסט נעילה</h2>
+            <p class="lead" style="margin-bottom:0">סמנו כל משימה לפי הסדר בסוף הלילה.</p>
+          </div>
+          <span class="cl-counter" id="cl-counter">0/25 הושלמו</span>
+        </div>
+        <div class="cl-progress-track"><div class="cl-progress-fill" id="cl-progress"></div></div>
+        <ul class="cl-list" id="cl-list"><!-- injected --></ul>
+        <button class="btn btn-ghost cl-reset" onclick="resetChecklist()">איפוס הסימונים ↺</button>
+      </div>
+    </section>
+
+    <footer>כלי עזר פנימי לתלמידי בית הספר · הסימונים והתשובות אינם נשמרים במכשיר</footer>
+  </main>
+
+  <!-- בנק השאלות (קובץ נפרד לעריכה קלה) -->
+  <script src="questions.js"></script>
+  <script>
+    /* =======================================================================
+     *  הגדרות
+     * ===================================================================== */
+
+    // TODO: הדבק כאן את ה-URL של Google Apps Script Web App
+    const SHEETS_WEBAPP_URL = "";
+
+    const QUESTIONS_PER_QUIZ = 15;   // כמה שאלות בכל מבחן
+    const PASS_THRESHOLD = 1.0;      // 100% בלבד = עובר
+
+    /* =======================================================================
+     *  צ'ק ליסט הנעילה (לפי הסדר)
+     * ===================================================================== */
+    const CHECKLIST_ITEMS = [
+      'סדרו את הציוד בחדר שהוגדר ע"י המדריך התורן — מיקרופונים באריזות המקוריות שלהם.',
+      'גלגלו ומיינו כבלים לפי סוגים, מונחים אחד לצד השני (לא אחד על השני).',
+      'גלגלו בעדינות את כבלי האוזניות כדי שלא יפרמו.',
+      'אם לקחתם כיסא מחדר אחר — החזירו אותו למקומו.',
+      'ודאו שהחדר והמסדרון נשארים מסודרים ונקיים.',
+      'נעלו את החדר לאחר סידור הציוד.',
+      'כבו את כל המזגנים בחדרים שהשתמשתם בהם.',
+      'כבו את כל עמדות הסאונד הפעילות.',
+      'כבו את התאורה בתוך החדרים שתרגלתם בהם <span class="warn">(⚠️ לא במסדרון ולא בסטודיו הגדול)</span>.',
+      'כבו את החשמל הראשי של העמדה בה עבדתם.',
+      'היכנסו לסטודיו הגדול וצלמו וידאו של 3 הבריחים כשהם נעולים, ושה"פס ברזל השחור" מונח כראוי.',
+      'בדקו ש"כנף הדלת" הימנית בסטודיו הגדול במצב נכון.',
+      'צלמו את שלט המזגן בסטודיו כאשר המזגן כבוי.',
+      'צלמו וידאו של נעילת דלת הסטודיו הגדול, ולאחר הנעילה דחפו את הדלת כדי לוודא שהיא נעולה טוב.',
+      'צלמו וידאו של דלת החירום שמעל הקפיטריה — נעולה, טרוקה, עם ה"פס ברזל השחור" במקום הנכון.',
+      'צלמו וידאו של הבריח של המעלית.',
+      'ודאו שכל שאר הדלתות בבית הספר טרוקות ונעולות, ושלא נעל אף אחד בטעות בחדר או בשירותים.',
+      'ודאו שהציוד האישי שלכם איתכם (מפתחות בית, פלאפון, תיקים/ארנקים, כוננים ניידים).',
+      'קראו את דף ההדגשים התלוי על דלת המטבח וודאו שמילאתם את כל המשימות הרשומות בו.',
+      'הקישו את קוד האזעקה בפאנל — תתחיל ספירה לאחור מלווה בצפצוף, <span class="warn">יש לכם 60 שניות לצאת</span> מגבולות בית הספר.',
+      'עלו בזהירות וצלמו וידאו של נעילת דלת היציאה החומה ושל השלכת המפתח לצינור (כך שיראו בסרטון שהמפתח אכן נפל ולא נשאר בצינור). אם המפתח נתקע — דחפו אותו במוט האלומיניום המחובר לדלת בעזרת החבל השחור.',
+      'צלמו את נעילת דלת הכניסה לבניין.',
+      'צלמו את הכנסת מפתח הכניסה לבניין לתוך הכספת.',
+      'אם אתם לא האחרונים לצאת: שלחו למדריך התורן הודעת "יצאתי".',
+      'אם אתם כן האחרונים לצאת ואתם נועלים: שלחו את כל הסרטונים למדריך התורן — <span class="warn">תוך 3 דקות בלבד</span> ממועד הנחת המפתח בכספת. <span class="warn">⚠️ אין לשלוח את הסרטונים לפני שיצאתם/נעלתם בפועל.</span>'
+    ];
+
+    /* =======================================================================
+     *  עזרי ערבוב — Fisher-Yates
+     * ===================================================================== */
+    function shuffle(arr) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    // בוחר n שאלות אקראיות מהבנק, מערבב סדר שאלות ותשובות,
+    // ומנרמל כל שאלה לפורמט אחיד עם options + correctIndex.
+    function buildQuiz() {
+      const picked = shuffle(QUESTION_BANK).slice(0, Math.min(QUESTIONS_PER_QUIZ, QUESTION_BANK.length));
+      return picked.map(function (q) {
+        if (q.type === 'tf') {
+          // בונים אפשרויות נכון/לא נכון ומערבבים את סדרן
+          const base = [
+            { text: 'נכון', isCorrect: q.correctAnswer === true },
+            { text: 'לא נכון', isCorrect: q.correctAnswer === false }
+          ];
+          const opts = shuffle(base);
+          return {
+            id: q.id, type: 'tf', question: q.question,
+            options: opts.map(function (o) { return o.text; }),
+            correctIndex: opts.findIndex(function (o) { return o.isCorrect; })
+          };
+        }
+        // mc — מערבבים את האפשרויות ומעדכנים את האינדקס הנכון דינמית
+        const correctText = q.options[q.correctIndex];
+        const opts = shuffle(q.options);
+        return {
+          id: q.id, type: 'mc', question: q.question,
+          options: opts,
+          correctIndex: opts.indexOf(correctText)
+        };
+      });
+    }
+
+    /* =======================================================================
+     *  מצב המבחן (בזיכרון בלבד — לא נשמר בין ריענונים)
+     * ===================================================================== */
+    let quizState = null;
+
+    function startQuiz() {
+      const input = document.getElementById('student-name');
+      const name = input.value.trim();
+      const err = document.getElementById('name-error');
+      if (!name) {
+        input.classList.add('invalid');
+        err.textContent = 'יש להזין שם מלא כדי להתחיל את המבחן.';
+        input.focus();
+        return;
+      }
+      input.classList.remove('invalid');
+      err.textContent = '';
+
+      quizState = {
+        studentName: name,
+        questions: buildQuiz(),
+        answers: {},   // index -> selected option index
+        current: 0
+      };
+
+      document.getElementById('quiz-start').classList.add('hidden');
+      document.getElementById('quiz-result').classList.add('hidden');
+      document.getElementById('quiz-active').classList.remove('hidden');
+      document.getElementById('q-student').textContent = '👤 ' + name;
+      renderQuestion();
+    }
+
+    function renderQuestion() {
+      const s = quizState;
+      const q = s.questions[s.current];
+      const total = s.questions.length;
+
+      document.getElementById('q-counter').textContent = 'שאלה ' + (s.current + 1) + ' מתוך ' + total;
+      document.getElementById('q-progress').style.width = ((s.current) / total * 100) + '%';
+
+      const badge = q.type === 'tf'
+        ? '<span class="q-type-badge tf">נכון / לא נכון</span>'
+        : '<span class="q-type-badge">שאלה אמריקאית</span>';
+
+      let html = badge + '<p class="q-text">' + q.question + '</p><div class="options">';
+      q.options.forEach(function (opt, i) {
+        const sel = s.answers[s.current] === i ? ' selected' : '';
+        html += '<label class="option' + sel + '" onclick="selectOption(' + i + ')">' +
+                  '<span class="radio"></span><span>' + opt + '</span>' +
+                '</label>';
+      });
+      html += '</div>';
+      document.getElementById('q-container').innerHTML = html;
+
+      // ניווט
+      document.getElementById('btn-prev').classList.toggle('hidden', s.current === 0);
+      const isLast = s.current === total - 1;
+      const nextBtn = document.getElementById('btn-next');
+      nextBtn.textContent = isLast ? 'סיים מבחן ✓' : 'הבא ▸';
+      updateNextState();
+    }
+
+    function selectOption(i) {
+      quizState.answers[quizState.current] = i;
+      renderQuestion();
+    }
+
+    function updateNextState() {
+      const answered = quizState.answers[quizState.current] !== undefined;
+      document.getElementById('btn-next').disabled = !answered;
+    }
+
+    function nextQuestion() {
+      const s = quizState;
+      if (s.answers[s.current] === undefined) return;
+      if (s.current < s.questions.length - 1) {
+        s.current++;
+        renderQuestion();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        finishQuiz();
+      }
+    }
+
+    function prevQuestion() {
+      if (quizState.current > 0) {
+        quizState.current--;
+        renderQuestion();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    function finishQuiz() {
+      const s = quizState;
+      const total = s.questions.length;
+      let correct = 0;
+      const wrongNumbers = [];
+      s.questions.forEach(function (q, i) {
+        if (s.answers[i] === q.correctIndex) {
+          correct++;
+        } else {
+          wrongNumbers.push(i + 1);
+        }
+      });
+      const passed = (correct / total) >= PASS_THRESHOLD;
+
+      // שליחה לגיליון — בכל מקרה (הצלחה או כישלון)
+      sendResultToSheet({
+        studentName: s.studentName,
+        score: correct,
+        totalQuestions: total,
+        passed: passed,
+        timestamp: new Date().toISOString()
+      });
+
+      renderResult(correct, total, passed, wrongNumbers);
+    }
+
+    function renderResult(correct, total, passed, wrongNumbers) {
+      const el = document.getElementById('quiz-result');
+      let html = '';
+
+      if (passed) {
+        html += '<div class="result-icon pass">✓</div>';
+        html += '<div class="result-title pass">כל הכבוד, עברת!</div>';
+        html += '<div class="result-score">ענית נכון על <b>' + correct + ' מתוך ' + total + '</b> השאלות — ציון מלא 🎉</div>';
+        html += '<p class="lead" style="text-align:center">אתה בקיא בנהלים. בהצלחה בתרגול הלילה!</p>';
+      } else {
+        html += '<div class="result-icon fail">✕</div>';
+        html += '<div class="result-title fail">לא עברת הפעם</div>';
+        html += '<div class="result-score">ענית נכון על <b>' + correct + ' מתוך ' + total + '</b> השאלות. כדי לעבור יש לענות נכון על כל השאלות.</div>';
+        html += '<div class="wrong-box">טעית בשאלות מספר: <span class="nums">' + wrongNumbers.join(', ') + '</span><br>' +
+                '<span style="color:var(--text-dim)">חזור על הנהלים ונסה שוב — בכל ניסיון מוגרלות שאלות חדשות.</span></div>';
+      }
+
+      html += '<button class="btn btn-primary" onclick="restartQuiz()">' + (passed ? 'התחל מבחן חדש ↺' : 'נסה שוב ↺') + '</button>';
+      html += '<div class="sync-note">התוצאה נשלחה למעקב.</div>';
+
+      el.innerHTML = html;
+      document.getElementById('quiz-active').classList.add('hidden');
+      el.classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // חוזר למסך הפתיחה. הניסיון הבא מגריל שאלות חדשות ומערבב מחדש.
+    function restartQuiz() {
+      quizState = null;
+      document.getElementById('quiz-result').classList.add('hidden');
+      document.getElementById('quiz-start').classList.remove('hidden');
+      const input = document.getElementById('student-name');
+      input.focus();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /* =======================================================================
+     *  שליחת תוצאה ל-Google Sheet (Apps Script Web App)
+     * ===================================================================== */
+    function sendResultToSheet(payload) {
+      if (!SHEETS_WEBAPP_URL) {
+        console.info('[מבחן לילה] לא הוגדר SHEETS_WEBAPP_URL — התוצאה לא נשלחה:', payload);
+        return;
+      }
+      // no-cors: Apps Script לא מחזיר כותרות CORS. השליחה מתבצעת, אך אין קריאת תשובה.
+      fetch(SHEETS_WEBAPP_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      }).catch(function (e) {
+        // כשל רשת לא חוסם את התלמיד — לוג שקט בלבד.
+        console.warn('[מבחן לילה] שליחת התוצאה נכשלה:', e);
+      });
+    }
+
+    /* =======================================================================
+     *  צ'ק ליסט
+     * ===================================================================== */
+    let checklistState = [];  // מערך בוליאני, מתאפס בכל טעינת דף
+
+    function renderChecklist() {
+      const ul = document.getElementById('cl-list');
+      ul.innerHTML = CHECKLIST_ITEMS.map(function (text, i) {
+        const done = checklistState[i] ? ' done' : '';
+        return '<li class="cl-item' + done + '" onclick="toggleChecklist(' + i + ')">' +
+                 '<span class="cl-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span>' +
+                 '<span class="cl-num">' + (i + 1) + '.</span>' +
+                 '<span class="cl-text">' + text + '</span>' +
+               '</li>';
+      }).join('');
+      updateChecklistCounter();
+    }
+
+    function toggleChecklist(i) {
+      checklistState[i] = !checklistState[i];
+      renderChecklist();
+    }
+
+    function updateChecklistCounter() {
+      const done = checklistState.filter(Boolean).length;
+      const total = CHECKLIST_ITEMS.length;
+      document.getElementById('cl-counter').textContent = done + '/' + total + ' הושלמו';
+      document.getElementById('cl-progress').style.width = (done / total * 100) + '%';
+    }
+
+    function resetChecklist() {
+      checklistState = new Array(CHECKLIST_ITEMS.length).fill(false);
+      renderChecklist();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /* =======================================================================
+     *  טאבים
+     * ===================================================================== */
+    function switchTab(tab) {
+      const isQuiz = tab === 'quiz';
+      document.getElementById('tab-quiz').classList.toggle('hidden', !isQuiz);
+      document.getElementById('tab-checklist').classList.toggle('hidden', isQuiz);
+      document.getElementById('tab-quiz-btn').classList.toggle('active', isQuiz);
+      document.getElementById('tab-checklist-btn').classList.toggle('active', !isQuiz);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /* =======================================================================
+     *  אתחול
+     * ===================================================================== */
+    document.getElementById('student-name').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') startQuiz();
+    });
+    document.getElementById('student-name').addEventListener('input', function () {
+      this.classList.remove('invalid');
+      document.getElementById('name-error').textContent = '';
+    });
+
+    checklistState = new Array(CHECKLIST_ITEMS.length).fill(false);
+    renderChecklist();
+  </script>
+</body>
+</html>
