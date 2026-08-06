@@ -289,6 +289,26 @@
     .wrong-box .nums { font-weight: 700; color: var(--red); letter-spacing: 1px; }
     .sync-note { text-align:center; color: var(--text-dim); font-size: 0.8rem; margin-top: 14px; }
 
+    /* ===== Review of wrong answers (fail screen) ===== */
+    .review { margin-top: 14px; }
+    .review-item {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-right: 3px solid var(--red);
+      border-radius: 10px;
+      padding: 13px 15px;
+      margin-bottom: 10px;
+    }
+    .review-q { font-weight: 600; line-height: 1.5; margin-bottom: 8px; }
+    .review-num { color: var(--accent); font-weight: 800; }
+    .review-chosen {
+      color: var(--red);
+      font-size: 0.95rem;
+      background: var(--red-soft);
+      border-radius: 8px;
+      padding: 7px 11px;
+    }
+
     /* ===== Checklist ===== */
     .cl-head { display:flex; align-items:center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
     .cl-counter {
@@ -653,10 +673,10 @@
         timestamp: new Date().toISOString()
       });
 
-      renderResult(correct, total, passed, wrongNumbers);
+      renderResult(correct, total, passed, wrongNumbers, wrongDetails);
     }
 
-    function renderResult(correct, total, passed, wrongNumbers) {
+    function renderResult(correct, total, passed, wrongNumbers, wrongDetails) {
       const el = document.getElementById('quiz-result');
       let html = '';
 
@@ -671,6 +691,10 @@
         html += '<div class="result-score">ענית נכון על <b>' + correct + ' מתוך ' + total + '</b> השאלות. כדי לעבור יש לענות נכון על כל השאלות.</div>';
         html += '<div class="wrong-box">טעית בשאלות מספר: <span class="nums">' + wrongNumbers.join(', ') + '</span><br>' +
                 '<span style="color:var(--text-dim)">חזור על הנהלים ונסה שוב — בכל ניסיון מוגרלות שאלות חדשות.</span></div>';
+
+        // סקירת השאלות שנטעו — לחיצה כדי לפתוח/לסגור
+        html += '<button class="btn btn-secondary" id="review-toggle" onclick="toggleReview()">📋 הצג את השאלות שטעיתי בהן</button>';
+        html += '<div id="review-list" class="review hidden">' + buildReviewHtml(wrongDetails) + '</div>';
       }
 
       html += '<button class="btn btn-primary" onclick="restartQuiz()">' + (passed ? 'התחל מבחן חדש ↺' : 'נסה שוב ↺') + '</button>';
@@ -680,6 +704,25 @@
       document.getElementById('quiz-active').classList.add('hidden');
       el.classList.remove('hidden');
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // בונה את רשימת השאלות שנטעו: השאלה + התשובה שהתלמיד בחר (מסומנת כשגויה).
+    // התשובה הנכונה אינה מוצגת לתלמיד — בכוונה.
+    function buildReviewHtml(wrongDetails) {
+      if (!wrongDetails || !wrongDetails.length) return '';
+      return wrongDetails.map(function (d) {
+        return '<div class="review-item">' +
+                 '<div class="review-q"><span class="review-num">' + d.number + '.</span> ' + d.question + '</div>' +
+                 '<div class="review-chosen">✗ הבחירה שלך: ' + d.chosen + '</div>' +
+               '</div>';
+      }).join('');
+    }
+
+    function toggleReview() {
+      const list = document.getElementById('review-list');
+      const btn = document.getElementById('review-toggle');
+      const open = list.classList.toggle('hidden');  // true אם עכשיו מוסתר
+      btn.textContent = open ? '📋 הצג את השאלות שטעיתי בהן' : '🔽 הסתר את השאלות שטעיתי בהן';
     }
 
     // חוזר למסך הפתיחה. הניסיון הבא מגריל שאלות חדשות ומערבב מחדש.
