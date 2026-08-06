@@ -627,11 +627,18 @@
       const total = s.questions.length;
       let correct = 0;
       const wrongNumbers = [];
+      const wrongDetails = [];   // למעקב המורה בלבד — לא מוצג לתלמיד
       s.questions.forEach(function (q, i) {
         if (s.answers[i] === q.correctIndex) {
           correct++;
         } else {
           wrongNumbers.push(i + 1);
+          wrongDetails.push({
+            number: i + 1,
+            question: q.question,
+            correct: q.options[q.correctIndex],                       // התשובה הנכונה
+            chosen: s.answers[i] != null ? q.options[s.answers[i]] : '(לא נענתה)'  // מה שהתלמיד בחר
+          });
         }
       });
       const passed = (correct / total) >= PASS_THRESHOLD;
@@ -642,6 +649,7 @@
         score: correct,
         totalQuestions: total,
         passed: passed,
+        wrongDetails: wrongDetails,
         timestamp: new Date().toISOString()
       });
 
